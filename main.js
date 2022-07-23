@@ -7,7 +7,7 @@ import conf from "./config.js";
 const save_dir = "./save";
 
 // 并行下载的个数
-const ParallelNum = 6;
+const ParallelNum = 10;
 
 const { storage } = new CloudBase({
     secretId: conf.secretId,
@@ -17,7 +17,7 @@ const { storage } = new CloudBase({
 
 async function downloadFile(item) {
     var file = item.Key;
-    if (file.Size == 0) {
+    if (file.Size == 0 || file === undefined) {
         return;
     }
     var save_path = resolve(`${save_dir}/${file}`);
@@ -84,12 +84,33 @@ async function downloadList(file, threadID) {
     }
 }
 
+
+function shuffle(array) {
+    let currentIndex = array.length,  randomIndex;
+  
+    // While there remain elements to shuffle.
+    while (currentIndex != 0) {
+  
+      // Pick a remaining element.
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+  
+    return;
+  }
+
 async function main() {
-    const allFiles = await storage.listDirectoryFiles("系统");
-    // console.log(allFiles);
+    const allFiles = await storage.listDirectoryFiles("");
+    console.log(allFiles);
+    await promises.writeFile('./file_list.txt', JSON.stringify(allFiles));
     var step = parseInt(allFiles.length / ParallelNum);
 
     var pool = [];
+    shuffle(allFiles);
     for (let i = 0; i < ParallelNum; i++) {
         pool.push(downloadList(allFiles.slice(i*step, (i+1)*step), i));
     }
