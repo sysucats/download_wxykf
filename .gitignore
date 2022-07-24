@@ -107,3 +107,6 @@ config.js
 save/*
 package-lock.json
 file_list.json
+db_photo.json
+delete_not_exist.json
+deletable_photo_id.json
