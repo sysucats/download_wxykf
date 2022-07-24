@@ -10,7 +10,7 @@ const { storage } = new CloudBase({
 });
 
 async function main() {
-    var file_str = await promises.readFile("./delete_file_list2.txt");
+    var file_str = await promises.readFile("./delete_file_list.json");
     const allFiles = JSON.parse(file_str);
 
     const step = 10

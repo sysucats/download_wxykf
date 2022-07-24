@@ -106,7 +106,7 @@ function shuffle(array) {
 async function main() {
     const allFiles = await storage.listDirectoryFiles("");
     console.log(allFiles);
-    await promises.writeFile('./file_list.txt', JSON.stringify(allFiles));
+    await promises.writeFile('./file_list.json', JSON.stringify(allFiles));
     var step = parseInt(allFiles.length / ParallelNum);
 
     var pool = [];

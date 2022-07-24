@@ -106,4 +106,4 @@ config.js
 
 save/*
 package-lock.json
-file_list.txt
+file_list.json
