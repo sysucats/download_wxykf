@@ -17,15 +17,20 @@ const { storage } = new CloudBase({
 
 async function downloadFile(item) {
     var file = item.Key;
-    if (file.Size == 0 || file === undefined) {
+    if (file.Size == 0 || file === undefined || file == "undefined") {
         return;
     }
     var save_path = resolve(`${save_dir}/${file}`);
-    // console.log(`Download file "${file}" to "${save_path}"`);
-    await storage.downloadFile({
-        cloudPath: file,
-        localPath: save_path,
-    });
+    try {
+        await storage.downloadFile({
+            cloudPath: file,
+            localPath: save_path,
+        });
+    } catch (error) {
+        if (error.code === 'ERR_INVALID_URL') {
+            console.error(`[ERR] Download file "${file}" to "${save_path}"`);
+        }
+    }
 }
 
 async function checkFileExists(filePath) {
