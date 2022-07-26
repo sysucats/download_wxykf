@@ -9,6 +9,9 @@ const save_dir = "./save";
 // 并行下载的个数
 const ParallelNum = 10;
 
+// 记录下载错误的次数
+var download_err_count = 0;
+
 const { storage } = new CloudBase({
     secretId: conf.secretId,
     secretKey: conf.secretKey,
@@ -29,6 +32,7 @@ async function downloadFile(item) {
     } catch (error) {
         if (error.code === 'ERR_INVALID_URL') {
             console.error(`[ERR] Download file "${file}" to "${save_path}"`);
+            download_err_count++;
         }
     }
 }
@@ -122,7 +126,7 @@ async function main() {
 
     await Promise.all(pool);
     
-    console.log("All Donwload Done.");
+    console.log(`All Donwload Done, err count: ${download_err_count}`);
 }
 
 main();
