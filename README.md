@@ -1,4 +1,8 @@
 # 微信云开发-云存储文件下载备份
+## 详细教程
+【腾讯文档】猫谱-云开发备份
+https://docs.qq.com/doc/DSFdHUlR4Y0ZiWndo
+
 ## 下载微信云开发里的内容
 0. 下载本仓库代码
 1. 下载安装node js v16.x.x，并配置`PATH`环境变量，https://nodejs.org/zh-cn/
