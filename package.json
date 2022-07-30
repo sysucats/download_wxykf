@@ -1,6 +1,9 @@
 {
-  "type": "module",
+  "name": "download_wxykf",
+  "version": "1.0",
+  "type": "commonjs",
   "dependencies": {
     "@cloudbase/manager-node": "^4.0.1"
-  }
+  },
+  "bin": "./main.js"
 }

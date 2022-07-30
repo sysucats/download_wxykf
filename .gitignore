@@ -110,3 +110,7 @@ file_list.json
 db_photo.json
 delete_not_exist.json
 deletable_photo_id.json
+download_wxykf-linux
+download_wxykf-macos
+download_wxykf-win.exe
+config.json

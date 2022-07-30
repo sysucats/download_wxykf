@@ -1,29 +1,39 @@
-import { constants, promises } from 'node:fs';
-import { parse, dirname, resolve } from 'path';
-import CloudBase from "@cloudbase/manager-node";
-import conf from "./config.js";
+const fs = require("node:fs");
+const path = require("path");
+const CloudBase = require("@cloudbase/manager-node");
+const readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
-// 本地文件保存位置
-const save_dir = "./save";
+// 读取配置
+const confPath = './config.json';
+var conf = null;
+var storage = null;
+async function readConfig() {
+    var dirExists = await checkFileExists(confPath);
+    if (!dirExists) {
+        return false;
+    }
+    conf = JSON.parse(fs.readFileSync(confPath, 'utf-8'));
+    storage = new CloudBase({
+        secretId: conf.secretId,
+        secretKey: conf.secretKey,
+        envId: conf.envId, // 云开发环境ID，可在腾讯云云开发控制台获取
+    }).storage;
+    return true;
+}
 
-// 并行下载的个数
-const ParallelNum = 10;
 
 // 记录下载错误的次数
 var download_err_count = 0;
-
-const { storage } = new CloudBase({
-    secretId: conf.secretId,
-    secretKey: conf.secretKey,
-    envId: conf.envId, // 云开发环境ID，可在腾讯云云开发控制台获取
-});
 
 async function downloadFile(item) {
     var file = item.Key;
     if (file.Size == 0 || file === undefined || file == "undefined") {
         return;
     }
-    var save_path = resolve(`${save_dir}/${file}`);
+    var save_path = path.resolve(`${conf.saveDir}/${file}`);
     try {
         await storage.downloadFile({
             cloudPath: file,
@@ -39,7 +49,7 @@ async function downloadFile(item) {
 
 async function checkFileExists(filePath) {
     try {
-        await promises.access(filePath);
+        await fs.promises.access(filePath);
         return true;
     } catch (error) {
         if (error.code === 'ENOENT') {
@@ -56,10 +66,10 @@ async function mkdirsSync(dirPath) {
       return;
     }
     // 递归创建
-    var base = dirname(dirPath);
+    var base = path.dirname(dirPath);
     await mkdirsSync(base);
     try {
-        await promises.mkdir(dirPath);
+        await fs.promises.mkdir(dirPath);
     } catch (error) {
         if (error.code != "EEXIST") {
             throw error;
@@ -69,7 +79,7 @@ async function mkdirsSync(dirPath) {
   }
 
 async function checkFileExistsWithMkdir(filePath) {
-    var base = await dirname(filePath);
+    var base = await path.dirname(filePath);
     await mkdirsSync(base);
     return await checkFileExists(filePath);
 }
@@ -78,7 +88,7 @@ async function downloadList(file, threadID) {
     var count = 0;
     for (let item of file) {
         // 检查文件是否存在
-        var localPath = `${save_dir}/${item.Key}`
+        var localPath = `${conf.saveDir}/${item.Key}`
         var fileExists = await checkFileExistsWithMkdir(localPath);
 
         count ++;
@@ -93,6 +103,14 @@ async function downloadList(file, threadID) {
     }
 }
 
+async function waitKey(text) {
+    return new Promise((resolve, _) => {
+        readline.question(text, key => {
+            readline.close();
+            resolve(key);
+        });
+    });
+}
 
 function shuffle(array) {
     let currentIndex = array.length,  randomIndex;
@@ -113,20 +131,33 @@ function shuffle(array) {
   }
 
 async function main() {
+    const readSuccess = await readConfig();
+    if (!readSuccess) {
+        await waitKey(`\n======== [ERROR] "${confPath}" not exist! Press "Enter" to exit. ========`);
+        return false;
+    }
+
     const allFiles = await storage.listDirectoryFiles("");
     console.log(allFiles);
-    await promises.writeFile('./file_list.json', JSON.stringify(allFiles));
-    var step = parseInt(allFiles.length / ParallelNum);
+    await fs.promises.writeFile('./file_list.json', JSON.stringify(allFiles));
+    var step = parseInt(allFiles.length / conf.parallelNum);
 
     var pool = [];
     shuffle(allFiles);
-    for (let i = 0; i < ParallelNum; i++) {
+    for (let i = 0; i < conf.parallelNum; i++) {
         pool.push(downloadList(allFiles.slice(i*step, (i+1)*step), i));
     }
 
     await Promise.all(pool);
     
     console.log(`All Donwload Done, err count: ${download_err_count}`);
+
+    await waitKey(`\n======== Press "Enter" to exit. ========`);
 }
 
-main();
+try {
+    main();
+} catch (error) {
+    console.log(error);
+    waitKey(`\n======== Press "Enter" to exit. ========`);
+}
