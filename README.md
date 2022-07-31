@@ -1,7 +1,5 @@
 # 微信云开发-云存储文件下载备份
-## 详细教程
-【腾讯文档】猫谱-云开发备份
-https://docs.qq.com/doc/DSFdHUlR4Y0ZiWndo
+
 
 ## 下载微信云开发里的内容（二进制执行）
 0. 进入release页面，下载对应平台最新版二进制包`download_wxykf-xxx`
@@ -23,6 +21,9 @@ https://docs.qq.com/doc/DSFdHUlR4Y0ZiWndo
 小提示：
 * 刚开始需要加载所有文件的列表，会比较慢（1~2分钟），不要着急
 * 本地文件会保存在`./save`目录下，多次执行`node main.js`只会下载本地没有的文件，不会重复下载，也就是说中间断了重启一次就好
+### 详细教程
+【腾讯文档】猫谱-云开发备份
+https://docs.qq.com/doc/DSFdHUlR4Y0ZiWndo
 
 ## 保存云数据库文件
 打开微信开发者工具，点击云开发，数据库，点击每个数据表，再点击`导出`，保存为json文件。
