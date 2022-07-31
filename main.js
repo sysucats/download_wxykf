@@ -1,27 +1,54 @@
 const fs = require("node:fs");
 const path = require("path");
 const CloudBase = require("@cloudbase/manager-node");
-const readline = require('readline').createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+const utils = require("./utils.js");
+const { exit } = require("node:process");
 
 // 读取配置
 const confPath = './config.json';
+const defaultParrallelNum = 10;
+const defaultSaveDir = "./save";
 var conf = null;
 var storage = null;
 async function readConfig() {
     var dirExists = await checkFileExists(confPath);
-    if (!dirExists) {
-        return false;
+    if (dirExists) {
+        conf = JSON.parse(fs.readFileSync(confPath, 'utf-8'));
     }
-    conf = JSON.parse(fs.readFileSync(confPath, 'utf-8'));
+    await inputConf();
+
     storage = new CloudBase({
         secretId: conf.secretId,
         secretKey: conf.secretKey,
         envId: conf.envId, // 云开发环境ID，可在腾讯云云开发控制台获取
     }).storage;
     return true;
+}
+
+// 输入conf
+async function inputConf() {
+    conf = {
+        "comment": [
+            "// 注释：",
+            "// 云开发环境信息，可在腾讯云云开发控制台获取，注意信息安全",
+            "// 获取secretId和secretKey，https://console.cloud.tencent.com/cam/capi",
+            "// 获取envId，https://console.cloud.tencent.com/tcb/env/index?rid=4",
+            "// 注意只修改双引号里的字符！源码地址：https://github.com/sysucats/download_wxykf"
+        ],
+    };
+    console.log(conf.comment.slice(0, -1).join("\n"));
+
+    // 获取输入
+    conf.secretId = await utils.waitLine("云环境信息 secretId:");
+    conf.secretKey = await utils.waitLine("云环境信息 secretKey:");
+    conf.envId = await utils.waitLine("云环境信息 envId:");
+
+    conf.parallelNum = await utils.waitLine(`并行下载数，parallel download number [回车默认 default "${defaultParrallelNum}"]:`);
+    conf.parallelNum = conf.parallelNum ? parseInt(conf.parallelNum) : defaultParrallelNum;
+
+    conf.saveDir = (await utils.waitLine(`文件保存目录，save to [回车默认 default "${defaultSaveDir}"]:`)) || defaultSaveDir;
+
+    await fs.promises.writeFile('./config.json', JSON.stringify(conf, null, 4));
 }
 
 
@@ -63,7 +90,7 @@ async function checkFileExists(filePath) {
 async function mkdirsSync(dirPath) {
     var dirExists = await checkFileExists(dirPath);
     if (dirExists) {
-      return;
+        return;
     }
     // 递归创建
     var base = path.dirname(dirPath);
@@ -76,7 +103,7 @@ async function mkdirsSync(dirPath) {
         }
     }
     return;
-  }
+}
 
 async function checkFileExistsWithMkdir(filePath) {
     var base = await path.dirname(filePath);
@@ -91,7 +118,7 @@ async function downloadList(file, threadID) {
         var localPath = `${conf.saveDir}/${item.Key}`
         var fileExists = await checkFileExistsWithMkdir(localPath);
 
-        count ++;
+        count++;
         var doneStr = `[thread-${threadID}] ${count}/${file.length} done, file: ${item.Key}`;
         if (fileExists) {
             console.log(doneStr);
@@ -103,38 +130,31 @@ async function downloadList(file, threadID) {
     }
 }
 
-async function waitKey(text) {
-    return new Promise((resolve, _) => {
-        readline.question(text, key => {
-            readline.close();
-            resolve(key);
-        });
-    });
-}
-
 function shuffle(array) {
-    let currentIndex = array.length,  randomIndex;
-  
+    let currentIndex = array.length, randomIndex;
+
     // While there remain elements to shuffle.
     while (currentIndex != 0) {
-  
-      // Pick a remaining element.
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-  
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
+
+        // Pick a remaining element.
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        // And swap it with the current element.
+        [array[currentIndex], array[randomIndex]] = [
+            array[randomIndex], array[currentIndex]];
     }
-  
+
     return;
-  }
+}
 
 async function main() {
     const readSuccess = await readConfig();
     if (!readSuccess) {
-        await waitKey(`\n======== [ERROR] "${confPath}" not exist! Press "Enter" to exit. ========`);
-        return false;
+        // TODO: 没有配置文件就输入
+        console.log(`"${confPath}" not exist, please input.`);
+        await utils.waitLine(`\n======== [ERROR] "${confPath}" not exist! Press "Enter" to exit. ========`);
+        exit();
     }
 
     const allFiles = await storage.listDirectoryFiles("");
@@ -145,19 +165,21 @@ async function main() {
     var pool = [];
     shuffle(allFiles);
     for (let i = 0; i < conf.parallelNum; i++) {
-        pool.push(downloadList(allFiles.slice(i*step, (i+1)*step), i));
+        pool.push(downloadList(allFiles.slice(i * step, (i + 1) * step), i));
     }
 
     await Promise.all(pool);
-    
+
     console.log(`All Donwload Done, err count: ${download_err_count}`);
 
-    await waitKey(`\n======== Press "Enter" to exit. ========`);
+    await utils.waitLine(`\n======== Press "Enter" to exit. ========`);
+    exit();
 }
 
 try {
     main();
 } catch (error) {
     console.log(error);
-    waitKey(`\n======== Press "Enter" to exit. ========`);
+    utils.waitLine(`\n======== Press "Enter" to exit. ========`);
+    exit();
 }

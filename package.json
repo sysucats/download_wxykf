@@ -5,5 +5,9 @@
   "dependencies": {
     "@cloudbase/manager-node": "^4.0.1"
   },
-  "bin": "./main.js"
+  "bin": "./main.js",
+  "scripts": {
+    "pkg": "pkg . --out-path=dist --compress GZip",
+    "pkgd": "pkg . --out-path=dist --compress GZip -d"
+  }
 }
