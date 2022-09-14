@@ -55,11 +55,11 @@ https://docs.qq.com/doc/DSFdHUlR4Y0ZiWndo
 ### 执行删除
 #### 删除冗余照片
 1. 修改`deletable_not_exist.json`文件为`delete_file_list.json`
-2. 执行`node delete_file_list.json`进行删除
+2. 执行`node delete_files.js`进行删除
 
 #### 删除原图
 1. 修改`deletable_origin_photo.json`文件为`delete_file_list.json`
-2. 执行`node delete_file_list.json`进行删除
+2. 执行`node delete_files.js`进行删除
 
 小提示：
 * 建议先下载全部图片后，再进行删除操作
