@@ -1,5 +1,4 @@
-import { constants, promises } from 'node:fs';
-import { parse, dirname, resolve } from 'path';
+const {promises} = require('node:fs');
 
 class DefaultDict {
     constructor(defaultInit) {
@@ -50,7 +49,7 @@ async function log_dict_length(dict_obj, title) {
 
 async function export_delete_json(file_list, file_name) {
     // 不应该删除的文件夹
-    const exclude_dir = ["mpcode", "news", "orgAvatar", "orgCatPhoto", "orgmpcode", "系统"]
+    const exclude_dir = ["mpcode", "news", "orgAvatar", "orgCatPhoto", "orgmpcode", "系统", "user", "系统文件"]
     // 先输出看看是哪些文件夹的
     var file_dir = new DefaultDict(Array);
     var final_file_list = [];

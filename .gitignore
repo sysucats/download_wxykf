@@ -105,6 +105,7 @@ dist
 config.js
 
 save/*
+dup_save/*
 package-lock.json
 file_list.json
 db_photo.json
@@ -112,3 +113,8 @@ delete_not_exist.json
 deletable_photo_id.json
 config.json
 config2.json
+laf.json
+@laf/
+database/
+deletable_not_exist.json
+deletable_origin_photo.json
